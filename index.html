@@ -20,7 +20,22 @@
 
     <!-- Marked.js (for Markdown parsing) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+    
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('khalraveth_theme') || 'light';
+                const savedFont = localStorage.getItem('khalraveth_font') || 'cursive';
+                
+                // Apply to documentElement (<html> tag) for immediate effect
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.documentElement.setAttribute('data-font', savedFont);
+            } catch (e) {
+                console.log("Storage access blocked or not available");
+            }
+        })();
+    </script>
+    
     <style>
         /* --- DYNAMIC THEME VARIABLES --- */
         :root {
