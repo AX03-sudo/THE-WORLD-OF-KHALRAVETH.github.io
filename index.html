@@ -2440,34 +2440,49 @@ _In an age where the Wither eats through the very concept of certainty, your par
 
             floatingBtn.addEventListener('click', toggleMenu);
             sidebarCloseBtn.addEventListener('click', toggleMenu);
+            
+            // Function to update UI buttons based on current HTML attributes
+            
+            function updateControlUI() {
+                const currentTheme = documentElement.getAttribute('data-theme');
+                const currentFont = documentElement.getAttribute('data-font');
+                
+                const themeSpan = themeBtn.querySelector('span');
+                themeSpan.textContent = currentTheme === 'dark' ? 'Theme: Dark' : 'Theme: Light';
+                
+                const fontSpan = fontBtn.querySelector('span');
+                fontSpan.textContent = currentFont === 'readable' ? 'Font: Easy' : 'Font: Cursive';
+            }
+            
+            // Initial UI Update
+            
+            updateControlUI();
 
-            // Theme Toggle
             themeBtn.addEventListener('click', () => {
                 triggerButtonAnim(themeBtn);
-                const isDark = body.getAttribute('data-theme') === 'dark';
+                const isDark = documentElement.getAttribute('data-theme') === 'dark';
                 const newTheme = isDark ? 'light' : 'dark';
-                body.setAttribute('data-theme', newTheme);
-
-                // Update Button Text
-                const span = themeBtn.querySelector('span');
-                span.textContent = newTheme === 'dark' ? 'Theme: Dark' : 'Theme: Light';
+                
+                documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('khalraveth_theme', newTheme);
+                
+                updateControlUI();
             });
 
-            // Font Toggle
             fontBtn.addEventListener('click', () => {
                 triggerButtonAnim(fontBtn);
-                const isReadable = body.getAttribute('data-font') === 'readable';
+                const isReadable = documentElement.getAttribute('data-font') === 'readable';
                 const newFont = isReadable ? 'cursive' : 'readable';
-                body.setAttribute('data-font', newFont);
-
-                // Update Button Text
-                const span = fontBtn.querySelector('span');
-                span.textContent = newFont === 'readable' ? 'Font: Easy' : 'Font: Cursive';
+                
+                documentElement.setAttribute('data-font', newFont);
+                localStorage.setItem('khalraveth_font', newFont);
+                
+                updateControlUI();
             });
 
-            // Smooth transition style
             displayArea.style.transition = 'opacity 0.3s ease-in-out';
         });
+
     </script>
 </body>
 </html>
