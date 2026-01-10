@@ -2238,93 +2238,73 @@ _In an age where the Wither eats through the very concept of certainty, your par
             const sidebar = document.getElementById('sidebar');
             const iconMenu = document.getElementById('icon-menu');
             const iconClose = document.getElementById('icon-close');
-
+            
             // Toggles
             const themeBtn = document.getElementById('theme-toggle');
             const fontBtn = document.getElementById('font-toggle');
-            const body = document.body;
+            const documentElement = document.documentElement;
 
             // --- MATH HELPER FUNCTIONS ---
-            // We need to protect math from Marked.js parsing (e.g., underscores becoming italics)
-            // Strategy: Replace math blocks with temporary placeholders, parse markdown, then restore math.
-
             let mathExpressions = [];
 
             function protectMath(text) {
-                mathExpressions = []; // reset storage
-
-                // 1. Protect Block Math $$...$$
+                mathExpressions = []; 
                 text = text.replace(/\$\$([\s\S]+?)\$\$/g, (match, tex) => {
                     mathExpressions.push({type: 'display', tex: tex});
                     return `%%%MATH_DISPLAY_${mathExpressions.length - 1}%%%`;
                 });
-
-                // 2. Protect Inline Math $...$
-                // Negative lookahead to ensure we don't catch currency like $5.00 if user typed space
-                // But for this purpose, we assume $...$ is math.
                 text = text.replace(/\$((?:[^\r\n$]|\\.)+)\$/g, (match, tex) => {
                     mathExpressions.push({type: 'inline', tex: tex});
                     return `%%%MATH_INLINE_${mathExpressions.length - 1}%%%`;
                 });
-
                 return text;
             }
 
             function restoreMath(html) {
                 return html.replace(/%%%MATH_(DISPLAY|INLINE)_(\d+)%%%/g, (match, type, index) => {
                     const expr = mathExpressions[index];
-                    // Restore as delimiters for KaTeX auto-render to pick up
                     if (expr.type === 'display') return `$$${expr.tex}$$`;
                     return `$${expr.tex}$`;
                 });
             }
 
             // --- NAVIGATION LOGIC ---
-            // Find all markdown script blocks
             const scripts = document.querySelectorAll('script[type="text/markdown"]');
-
+            
             scripts.forEach((script, index) => {
                 const title = script.getAttribute('data-title') || `Chapter ${index + 1}`;
                 const id = script.id;
-
+                
                 const btn = document.createElement('div');
                 btn.className = 'nav-item';
                 btn.textContent = title;
                 btn.onclick = () => loadChapter(id, btn);
-
+                
                 sidebarList.appendChild(btn);
 
-                // Load first chapter by default
                 if (index === 0) {
                     loadChapter(id, btn);
                 }
             });
 
             function loadChapter(id, activeBtn) {
-                // 1. Clear old active states and submenus
                 document.querySelectorAll('.nav-item').forEach(el => {
                     el.classList.remove('active');
                 });
                 document.querySelectorAll('.sub-menu').forEach(el => el.remove());
 
-                // 2. Set active
                 activeBtn.classList.add('active');
 
-                // 3. Render Content
                 const rawMarkdown = document.getElementById(id).innerHTML.trim();
-
-                // Animate transition
                 displayArea.style.opacity = '0';
-
+                
                 setTimeout(() => {
-                    // --- PROCESS MARKDOWN WITH MATH ---
                     const protectedText = protectMath(rawMarkdown);
                     const htmlContent = marked.parse(protectedText);
                     const finalHtml = restoreMath(htmlContent);
-
+                    
                     displayArea.innerHTML = finalHtml;
-
-                    // --- RENDER MATH ---
+                    
                     if (window.renderMathInElement) {
                         renderMathInElement(displayArea, {
                             delimiters: [
@@ -2336,31 +2316,28 @@ _In an age where the Wither eats through the very concept of certainty, your par
                             throwOnError: false
                         });
                     }
-
-                    // 4. Generate Sub-menu dynamically
+                    
                     const headers = displayArea.querySelectorAll('h1, h2');
                     if (headers.length > 0) {
                         const subMenu = document.createElement('div');
                         subMenu.className = 'sub-menu';
-
+                        
                         headers.forEach((header, index) => {
-                            // Create ID for scrolling
                             const anchorId = 'header-' + index;
                             header.id = anchorId;
-
+                            
                             const link = document.createElement('div');
                             link.className = 'sub-menu-item';
                             link.textContent = header.textContent;
-
-                            // Indent H2s
+                            
                             if (header.tagName === 'H2') {
                                 link.classList.add('indent');
                             }
-
+                            
                             link.onclick = (e) => {
                                 e.stopPropagation();
                                 header.scrollIntoView({ behavior: 'smooth' });
-
+                                
                                 // Close Menu on selection (Mobile Only)
                                 if (window.innerWidth < 768) {
                                     toggleMenu();
@@ -2368,27 +2345,22 @@ _In an age where the Wither eats through the very concept of certainty, your par
                             };
                             subMenu.appendChild(link);
                         });
-
-                        // Insert after the active button
+                        
                         activeBtn.after(subMenu);
                     }
 
                     displayArea.style.opacity = '1';
-
-                    // Reset scroll
                     document.getElementById('main-scroll').scrollTop = 0;
                 }, 200);
             }
 
             // --- UI LOGIC ---
-
-            // Helper to animate button
+            
             function triggerButtonAnim(btn) {
                 const icon = btn.querySelector('svg');
-                // Handle complex SVG structure in toggle btns vs simple in icon btns
                 if(icon) {
                    icon.classList.remove('spin-pop');
-                   void icon.offsetWidth; // trigger reflow
+                   void icon.offsetWidth; 
                    icon.classList.add('spin-pop');
                 }
             }
@@ -2397,43 +2369,34 @@ _In an age where the Wither eats through the very concept of certainty, your par
             function toggleMenu() {
                 const isMobile = window.innerWidth < 768;
                 const isSidebarOpenMobile = !sidebar.classList.contains('-translate-x-full');
-                const isSidebarClosedDesktop = body.classList.contains('desktop-sidebar-closed');
+                const isSidebarClosedDesktop = document.body.classList.contains('desktop-sidebar-closed');
 
                 if (isMobile) {
-                    // Mobile Toggle Logic
                     if (isSidebarOpenMobile) {
-                        // Close it
                         sidebar.classList.add('-translate-x-full');
                         document.body.classList.remove('menu-open');
                         iconMenu.classList.remove('hidden');
                         iconClose.classList.add('hidden');
                     } else {
-                        // Open it
                         sidebar.classList.remove('-translate-x-full');
                         document.body.classList.add('menu-open');
                         iconMenu.classList.add('hidden');
                         iconClose.classList.remove('hidden');
                     }
                 } else {
-                    // Desktop Toggle Logic
                     if (isSidebarClosedDesktop) {
-                        // Open it
-                        body.classList.remove('desktop-sidebar-closed');
-                        iconMenu.classList.remove('hidden');
-                        iconClose.classList.add('hidden'); // On desktop "hamburger" means menu is there, maybe keep hamburger?
-                        // Actually, let's keep it consistent: X means "close sidebar", Hamburger means "open sidebar"
-                         iconMenu.classList.add('hidden');
-                         iconClose.classList.remove('hidden');
+                        document.body.classList.remove('desktop-sidebar-closed');
+                        iconMenu.classList.add('hidden');
+                        iconClose.classList.remove('hidden');
                     } else {
-                        // Close it
-                        body.classList.add('desktop-sidebar-closed');
+                        document.body.classList.add('desktop-sidebar-closed');
                         iconMenu.classList.remove('hidden');
                         iconClose.classList.add('hidden');
                     }
                 }
             }
 
-            // Initial State Check for Icons (Desktop starts open)
+            // Init Icons based on screen size
             if (window.innerWidth >= 768) {
                  iconMenu.classList.add('hidden');
                  iconClose.classList.remove('hidden');
@@ -2441,9 +2404,10 @@ _In an age where the Wither eats through the very concept of certainty, your par
 
             floatingBtn.addEventListener('click', toggleMenu);
             sidebarCloseBtn.addEventListener('click', toggleMenu);
+
+            // --- THEME & FONT WITH STORAGE ---
             
             // Function to update UI buttons based on current HTML attributes
-            
             function updateControlUI() {
                 const currentTheme = documentElement.getAttribute('data-theme');
                 const currentFont = documentElement.getAttribute('data-font');
@@ -2456,7 +2420,6 @@ _In an age where the Wither eats through the very concept of certainty, your par
             }
             
             // Initial UI Update
-            
             updateControlUI();
 
             themeBtn.addEventListener('click', () => {
@@ -2483,7 +2446,6 @@ _In an age where the Wither eats through the very concept of certainty, your par
 
             displayArea.style.transition = 'opacity 0.3s ease-in-out';
         });
-
     </script>
 </body>
 </html>
